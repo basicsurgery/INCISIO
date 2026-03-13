@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Incisio">
+  <meta name="theme-color" content="#0D1117">
+  <title>Incisio — Surgical Logbook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Auth Screen ─────────────────────────────────────── -->
+<div id="authScreen">
+  <div class="auth-wrap">
+    <div class="auth-logo">Incisio</div>
+    <div class="auth-sub">Surgical Procedure Logbook</div>
+    <div class="auth-note">Practice Plus Group Hospital</div>
+
+    <div id="authLogin" class="auth-form">
+      <div class="auth-form-title">Sign in</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="loginError" class="auth-error" style="display:none;"></div>
+      <button class="btn btn-primary" onclick="doLogin()" id="loginBtn">Sign in</button>
+      <button class="auth-switch" onclick="showAuthPanel('register')">No account? Create one →</button>
+      <button class="auth-switch" onclick="showAuthPanel('reset')" style="margin-top:4px;">Forgot password?</button>
+    </div>
+
+    <div id="authRegister" class="auth-form" style="display:none;">
+      <div class="auth-form-title">Create account</div>
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Jane Smith">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password <span style="font-weight:400;color:var(--muted);">(min 8 characters)</span></label>
+        <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div id="registerError" class="auth-error" style="display:none;"></div>
+      <button class="btn btn-primary" onclick="doRegister()" id="registerBtn">Create account</button>
+      <button class="auth-switch" onclick="showAuthPanel('login')">← Back to sign in</button>
+    </div>
+
+    <div id="authReset" class="auth-form" style="display:none;">
+      <div class="auth-form-title">Reset password</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Enter your email and we'll send you a reset link.</p>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="resetEmail" placeholder="your@email.com">
+      </div>
+      <div id="resetMsg" style="display:none;font-size:13px;color:var(--success);margin-bottom:12px;padding:10px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2);border-radius:8px;"></div>
+      <button class="btn btn-primary" onclick="doReset()" id="resetBtn">Send reset link</button>
+      <button class="auth-switch" onclick="showAuthPanel('login')">← Back to sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Terms & Conditions Modal ────────────────────────── -->
+<div class="fullscreen-modal" id="tcModal">
+  <div class="fm-header">
+    <div class="fm-title">Terms &amp; Conditions</div>
+  </div>
+  <div class="fm-body">
+    <h2>1. About Incisio</h2>
+    <p>Incisio is a digital procedure logbook for Surgical First Assistants (SFAs), Scrub Nurses, ODPs, and other non-medical theatre staff at Practice Plus Group Hospital, Ilford. It supports professional portfolio development and personal record-keeping.</p>
+    <h2>2. Not a Clinical Record</h2>
+    <div class="warn-box"><p><strong>Important:</strong> Incisio is not a clinical system and does not form part of any patient record. Do not record patient names, NHS numbers, dates of birth, or any information that could identify an individual. All entries must relate to your own professional development only.</p></div>
+    <h2>3. Data Storage</h2>
+    <p>Your data is stored securely in the cloud (Supabase) and is associated with your account. It is also cached locally on your device for offline use. You can export your data at any time via Settings → Export CSV.</p>
+    <div class="info-box"><p>Unlike the previous version, data is <strong>not lost</strong> if you clear your browser — it is backed up to the cloud automatically whenever you are online.</p></div>
+    <h2>4. No Patient Data</h2>
+    <p>You must not enter any patient-identifiable information. This includes patient name, date of birth, NHS number, hospital number, or any combination that could identify a patient. Entering patient data constitutes a potential data protection breach under UK GDPR.</p>
+    <h2>5. Professional Use</h2>
+    <p>Entries should accurately reflect procedures you personally participated in. Falsification of logbook entries may constitute professional misconduct and could be referred to your regulatory body (NMC, HCPC, or FPA).</p>
+    <h2>6. Accuracy of Information</h2>
+    <p>Procedure codes (OPCS-4 / CPT) and clinical information are provided as guidance only. Verify all codes before formal submission.</p>
+    <h2>7. Acceptance</h2>
+    <p>By continuing you confirm you have read these terms, will not enter patient data, and understand your responsibilities as a registered healthcare professional.</p>
+  </div>
+  <div class="fm-accept-bar">
+    <button class="btn btn-primary" onclick="acceptTC()">I Agree &amp; Continue</button>
+  </div>
+</div>
+
+<!-- ── Onboarding (profile setup) ─────────────────────── -->
+<div id="onboardingScreen" style="display:none;">
+  <div class="auth-wrap">
+    <div class="auth-logo" style="font-size:34px;">Your Profile</div>
+    <div class="auth-sub" style="margin-bottom:24px;">Tell us a bit about yourself</div>
+    <div class="auth-form">
+      <div class="field">
+        <label>Role / Title</label>
+        <input type="text" id="ob_roleTitle" placeholder="e.g. Surgical First Assistant, Scrub Nurse, ODP">
+      </div>
+      <div class="field">
+        <label>Registration Number (NMC / HCPC / FPA)</label>
+        <input type="text" id="ob_regNumber" placeholder="e.g. NMC 12A3456B">
+      </div>
+      <div class="field">
+        <label>Hospital / Organisation</label>
+        <input type="text" id="ob_hospital" placeholder="e.g. Practice Plus Group Hospital, Ilford">
+      </div>
+      <button class="btn btn-primary" style="margin-top:8px;" onclick="saveOnboardingProfile()">Save &amp; Start Logging</button>
+      <button class="auth-switch" onclick="skipOnboarding()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main App ────────────────────────────────────────── -->
+<div id="app" style="display:none;">
+
+  <div class="header">
+    <div class="header-logo" id="headerTitle">Incisio</div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div id="syncIndicator" class="sync-dot synced" title="Sync status"></div>
+      <button class="header-btn" id="guideBtn" onclick="openModal('guideModal')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></svg>
+      </button>
+      <button class="header-btn" id="shareBtn" onclick="shareByEmail()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+      </button>
+      <button class="header-btn" id="headerActionBtn" style="display:none;" onclick="headerAction()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" id="headerActionIcon"></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="screens">
+    <!-- Log screen -->
+    <div class="screen active" id="screen-log">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="search-bar">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search procedures…" id="searchInput" oninput="renderLog()">
+      </div>
+      <div class="filter-row" id="filterRow"></div>
+      <div class="section-header">
+        <span style="font-size:13px;color:var(--muted);font-weight:500;">Procedures</span>
+        <span class="count-badge" id="countBadge">0</span>
+      </div>
+      <div id="entryList"></div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="screen" id="screen-dashboard">
+      <div id="dashboardContent"></div>
+    </div>
+
+    <!-- Follow-ups -->
+    <div class="screen" id="screen-followups">
+      <div id="followupContent"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="screen" id="screen-settings">
+      <div class="card" style="margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Your Profile</div>
+        <div style="margin-bottom:10px;">
+          <label>Full Name</label>
+          <input type="text" id="prof_fullName" placeholder="Your full name">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label>Role / Title</label>
+          <input type="text" id="prof_roleTitle" placeholder="e.g. SFA, Scrub Nurse, ODP">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label>Registration Number</label>
+          <input type="text" id="prof_regNumber" placeholder="NMC / HCPC / FPA number">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Hospital / Organisation</label>
+          <input type="text" id="prof_hospital" placeholder="e.g. Practice Plus Group Hospital, Ilford">
+        </div>
+        <button class="btn btn-primary" onclick="saveProfileFromSettings()">Save Profile</button>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Sync status</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="syncStatusText">Checking…</p>
+        <button class="btn btn-secondary" onclick="forcSync()">Sync now</button>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Export all data</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Download a CSV backup of all procedure entries.</p>
+        <button class="btn btn-secondary" onclick="exportCSV()">Download CSV</button>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Share / Email backup</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Email today's entries to yourself.</p>
+        <button class="share-btn" onclick="shareByEmail()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+          Email today's entries
+        </button>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;color:var(--danger);margin-bottom:4px;">Sign out</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">You'll need to sign in again to access your logbook.</p>
+        <button class="btn btn-danger" onclick="doSignOut()">Sign out</button>
+      </div>
+
+      <div style="text-align:center;padding:16px 20px 8px;display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="display:flex;gap:16px;">
+          <button style="background:none;border:none;color:var(--info);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;" onclick="openModal('guideModal')">User Guide</button>
+          <button style="background:none;border:none;color:var(--info);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;" onclick="openModal('tcModal2')">Terms &amp; Conditions</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Incisio v2.0 · Practice Plus Group<br>Cloud-synced · Offline-first</div>
+      </div>
+    </div>
+
+    <!-- Detail screen -->
+    <div class="screen" id="screen-detail">
+      <div id="detailContent"></div>
+    </div>
+
+    <!-- Add/Edit screen -->
+    <div class="screen" id="screen-form">
+      <div id="formContent"></div>
+    </div>
+  </div>
+
+  <button class="fab" id="fab" onclick="openAdd()">
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goScreen('log',this)" id="navLog">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
+      Log
+    </button>
+    <button class="nav-btn" onclick="goScreen('dashboard',this)" id="navDash">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" onclick="goScreen('followups',this)" id="navFollowup">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+      Follow-ups
+    </button>
+    <button class="nav-btn" onclick="goScreen('settings',this)" id="navSettings">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<!-- ── User Guide Modal ──────────────────────────────────── -->
+<div class="fullscreen-modal" id="guideModal">
+  <div class="fm-header">
+    <div class="fm-title">User Guide</div>
+    <button class="fm-close" onclick="closeModal('guideModal')">Close</button>
+  </div>
+  <div class="fm-body">
+    <div class="info-box"><p><strong>Incisio v2.0</strong> — cloud-synced surgical logbook. Your data is stored securely in the cloud and cached offline on your device.</p></div>
+    <h2>Getting Started</h2>
+    <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text"><strong>Create an account</strong><span>Sign up with your email and password. Each person has their own private logbook — no one else can see your entries.</span></div></div>
+    <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text"><strong>Set up your profile</strong><span>Add your role, registration number, and hospital. These auto-fill every new entry.</span></div></div>
+    <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text"><strong>Log a procedure</strong><span>Tap the + button. Date and procedure name are required. All other fields are optional but recommended.</span></div></div>
+    <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text"><strong>Use Smart Entry ✨</strong><span>Type a description like "lap chole with Mr Smith, assisted, 45 min" and tap ✨ to auto-populate fields.</span></div></div>
+    <h2>Sync &amp; Offline Use</h2>
+    <p>The app works fully offline — entries are saved to your device instantly. When you regain internet connection, they automatically sync to the cloud. The dot in the top-right corner shows sync status: <strong style="color:var(--success);">green</strong> = synced, <strong style="color:var(--comp3);">amber</strong> = pending, <strong style="color:var(--muted);">grey</strong> = offline.</p>
+    <h2>Logging a Procedure</h2>
+    <p><strong>Procedure Name</strong> — start typing to see OPCS/CPT code suggestions. Tap one to auto-fill name, code, and specialty.</p>
+    <p><strong>Competency Level</strong> — Observed, Assisted, Performed (Supervised), or Performed (Independent).</p>
+    <p><strong>Complications</strong> — the app auto-suggests a Clavien-Dindo grade as you type.</p>
+    <p><strong>Supervisor Sign-off</strong> — hand your device to your supervisor to trace their signature with a finger.</p>
+    <h2>Managing Entries</h2>
+    <p>Tap any entry to view details, edit, duplicate, or delete. Swipe left to quickly delete. Use the search bar or specialty chips to filter.</p>
+    <h2>Export &amp; Sharing</h2>
+    <p>Use Settings → Export CSV for a full data backup. Use the envelope icon (top-right on Log tab) to email today's entries to yourself.</p>
+    <h2>Privacy</h2>
+    <p>Never enter patient-identifiable information. Your logbook is private — only you can access it with your login credentials.</p>
+  </div>
+</div>
+
+<!-- ── T&C (in-app version, no accept button) ────────────── -->
+<div class="fullscreen-modal" id="tcModal2">
+  <div class="fm-header">
+    <div class="fm-title">Terms &amp; Conditions</div>
+    <button class="fm-close" onclick="closeModal('tcModal2')">Close</button>
+  </div>
+  <div class="fm-body">
+    <h2>1. About Incisio</h2>
+    <p>Incisio is a digital procedure logbook for non-medical theatre staff at Practice Plus Group Hospital, Ilford.</p>
+    <h2>2. Not a Clinical Record</h2>
+    <div class="warn-box"><p>Do not record patient-identifiable information. Entries must relate to your own professional development only.</p></div>
+    <h2>3. Data &amp; Privacy</h2>
+    <p>Data is stored securely in the cloud (Supabase, EU region) linked to your account, and cached locally for offline use. You can export or delete your data at any time.</p>
+    <h2>4. Professional Use</h2>
+    <p>Entries should accurately reflect procedures you personally participated in. Falsification may constitute professional misconduct.</p>
+    <h2>5. Accuracy</h2>
+    <p>Procedure codes (OPCS-4/CPT) are provided as guidance. Verify before formal submission.</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body>
+</html>
